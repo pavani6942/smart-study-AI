@@ -1,0 +1,7 @@
+{
+  "name": "AuthShield - Firebase Auth & User Management",
+  "description": "Secure Firebase Authentication system featuring email & password registration, email verification workflows, password reset, and protected user management dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
