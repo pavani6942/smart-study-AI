@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Mail, Lock, Eye, EyeOff, UserPlus, Loader2, ShieldCheck, Check, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { PasswordStrengthMeter, evaluatePassword } from './PasswordStrengthMeter';
+import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { FirebaseConsoleAlert } from './FirebaseConsoleAlert';
 
 interface RegisterFormProps {
@@ -20,7 +20,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const passwordAnalysis = evaluatePassword(password);
   const passwordsMatch = password.length > 0 && password === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,54 +28,56 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     clearAuthError();
 
     if (!name.trim()) {
-      setLocalError('Please enter your full name.');
+      setLocalError('ERROR: FULL_NAME_REQUIRED');
       return;
     }
 
     if (!email.trim()) {
-      setLocalError('Please enter a valid email address.');
+      setLocalError('ERROR: VALID_EMAIL_REQUIRED');
       return;
     }
 
     if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters long.');
+      setLocalError('ERROR: CIPHER_MINIMUM_6_CHARACTERS');
       return;
     }
 
     if (password !== confirmPassword) {
-      setLocalError('Passwords do not match. Please verify both fields.');
+      setLocalError('ERROR: CIPHER_MISMATCH');
       return;
     }
 
     if (!agreeTerms) {
-      setLocalError('Please accept the terms of service to proceed.');
+      setLocalError('ERROR: SECURITY_TERMS_UNACKNOWLEDGED');
       return;
     }
 
     setLoading(true);
     try {
       await signUpWithEmail(email.trim(), password, name.trim());
-      // On success, AuthState listener will pick up user and show Dashboard or Email Verification state
     } catch (err: any) {
-      setLocalError(err?.message || 'Registration failed.');
+      setLocalError(err?.message || 'ENROLLMENT_FAILED');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-          Create an Account
+        <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 block mb-1">
+          Identity Provisioning
+        </span>
+        <h2 className="font-display font-bold text-3xl uppercase tracking-tight text-[#18181a]">
+          Register Identity
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Register with Firebase Auth and verify your email address
+        <p className="font-mono-tech text-xs text-[#18181a]/70 mt-1">
+          Provision node credentials and trigger automated email verification
         </p>
       </div>
 
-      {/* Console Alert if provider issue */}
+      {/* Console Alert */}
       {authError && (
         <FirebaseConsoleAlert
           errorCode={authError.code}
@@ -87,67 +88,64 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
       {/* Local Error */}
       {localError && !authError && (
-        <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
+        <div className="p-3 border-2 border-red-600 bg-red-50 text-red-900 font-mono-tech text-xs">
           {localError}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-3.5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Full Name */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Full Name
+          <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+            Entity Legal / System Name
           </label>
-          <div className="relative">
-            <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Alex Morgan"
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            />
-          </div>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Alex Morgan"
+            className="w-full px-4 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-xs text-[#18181a] placeholder:text-[#18181a]/30 focus:outline-none focus:border-[#0047ff] transition"
+          />
         </div>
 
         {/* Email Address */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Email Address
+          <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+            Node Email Address
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#18181a]/40" />
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@domain.com"
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="operator@system.node"
+              className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-xs text-[#18181a] placeholder:text-[#18181a]/30 focus:outline-none focus:border-[#0047ff] transition"
             />
           </div>
         </div>
 
         {/* Password */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Password
+          <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+            Access Cipher (Password)
           </label>
           <div className="relative">
-            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#18181a]/40" />
             <input
               type={showPassword ? 'text' : 'password'}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose a strong password"
-              className="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Minimum 6 characters"
+              className="w-full pl-10 pr-10 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-xs text-[#18181a] placeholder:text-[#18181a]/30 focus:outline-none focus:border-[#0047ff] transition"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#18181a]/50 hover:text-[#18181a] p-1 cursor-pointer"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -157,57 +155,48 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
         {/* Confirm Password */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Confirm Password
+          <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+            Confirm Access Cipher
           </label>
           <div className="relative">
-            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#18181a]/40" />
             <input
               type={showPassword ? 'text' : 'password'}
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Re-enter your password"
-              className={`w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-800/80 border rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${
+              placeholder="Re-enter cipher"
+              className={`w-full pl-10 pr-10 py-3 bg-white border-2 font-mono-tech text-xs text-[#18181a] placeholder:text-[#18181a]/30 focus:outline-none transition ${
                 confirmPassword.length > 0
                   ? passwordsMatch
-                    ? 'border-emerald-500 focus:ring-emerald-500'
-                    : 'border-red-400 focus:ring-red-400'
-                  : 'border-gray-300 dark:border-gray-700 focus:ring-blue-500'
+                    ? 'border-[#0047ff]'
+                    : 'border-red-600'
+                  : 'border-[#18181a]'
               }`}
             />
-            {confirmPassword.length > 0 && passwordsMatch && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">
-                <Check className="w-4 h-4" />
-              </span>
-            )}
           </div>
           {confirmPassword.length > 0 && !passwordsMatch && (
-            <p className="text-[11px] text-red-500 mt-1">Passwords do not match yet.</p>
+            <p className="font-mono-tech text-[10px] text-red-600 mt-1">CIPHER_MISMATCH_DETECTED</p>
           )}
         </div>
 
-        {/* Verification notice */}
-        <div className="p-3 bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 rounded-xl text-xs text-blue-900 dark:text-blue-300 flex items-start gap-2.5">
-          <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-          <span>
-            <strong>Automatic Verification:</strong> An email verification link will be automatically sent to your inbox upon registration.
-          </span>
+        {/* Automatic verification alert */}
+        <div className="p-3 bg-[#f8f7f4] border border-[#18181a]/20 font-mono-tech text-[11px] text-[#18181a]">
+          <span className="text-[#0047ff] font-bold block mb-0.5">DISPATCH_DIRECTIVE:</span>
+          An automated verification link will be broadcast to the registered address immediately upon record creation.
         </div>
 
-        {/* Terms agreement */}
+        {/* Terms */}
         <div className="pt-1">
-          <label className="flex items-start gap-2 cursor-pointer select-none text-xs text-gray-600 dark:text-gray-400">
+          <label className="flex items-start gap-2 cursor-pointer select-none font-mono-tech text-[11px] text-[#18181a]/70">
             <input
               type="checkbox"
               required
               checked={agreeTerms}
               onChange={(e) => setAgreeTerms(e.target.checked)}
-              className="w-4 h-4 mt-0.5 rounded text-blue-600 border-gray-300 focus:ring-blue-500"
+              className="w-4 h-4 rounded-none accent-[#18181a] border-[#18181a] mt-0.5"
             />
-            <span>
-              I agree to the <strong>Terms of Service</strong> and acknowledge Firebase user security policies.
-            </span>
+            <span>ACKNOWLEDGE_TERMS_AND_SECURITY_POLICIES</span>
           </label>
         </div>
 
@@ -215,31 +204,28 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] disabled:opacity-50 text-white font-semibold rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-2"
+          className="w-full py-3.5 px-6 bg-[#18181a] hover:bg-[#0047ff] disabled:opacity-50 text-white font-display font-semibold uppercase tracking-wider text-base transition cursor-pointer text-center block mt-2"
         >
           {loading ? (
-            <>
+            <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Creating Account...
-            </>
+              PROVISIONING_IDENTITY...
+            </span>
           ) : (
-            <>
-              <UserPlus className="w-4 h-4" />
-              Create & Verify Account
-            </>
+            'EXECUTE_REGISTRATION'
           )}
         </button>
       </form>
 
       {/* Switch to Login */}
-      <div className="pt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-        Already have an account?{' '}
+      <div className="pt-2 text-center font-mono-tech text-xs text-[#18181a]/60">
+        ALREADY_PROVISIONED?{' '}
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer"
+          className="text-[#0047ff] font-bold hover:underline cursor-pointer"
         >
-          Sign in
+          PROCEED_TO_AUTH
         </button>
       </div>
     </div>

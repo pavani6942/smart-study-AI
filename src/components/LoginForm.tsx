@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Eye, EyeOff, LogIn, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { FirebaseConsoleAlert } from './FirebaseConsoleAlert';
 
@@ -40,7 +40,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     clearAuthError();
 
     if (!email.trim() || !password) {
-      setLocalError('Please fill in both email and password.');
+      setLocalError('ERROR: REQUIRED_FIELDS_EMPTY');
       return;
     }
 
@@ -53,7 +53,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       }
       await signInWithEmail(email.trim(), password);
     } catch (err: any) {
-      setLocalError(err?.message || 'Login failed.');
+      setLocalError(err?.message || 'LOGIN_AUTHENTICATION_FAILED');
     } finally {
       setLoading(false);
     }
@@ -66,21 +66,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setLocalError(err?.message || 'Google Sign-In failed.');
+      setLocalError(err?.message || 'GOOGLE_OAUTH_FAILED');
     } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-          Welcome back
+        <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 block mb-1">
+          Identity Challenge
+        </span>
+        <h2 className="font-display font-bold text-3xl uppercase tracking-tight text-[#18181a]">
+          Authorize User
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Sign in to your account with Firebase Authentication
+        <p className="font-mono-tech text-xs text-[#18181a]/70 mt-1">
+          Provide credentials to access protected node resources
         </p>
       </div>
 
@@ -95,7 +98,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       {/* Local Error Banner */}
       {localError && !authError && (
-        <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
+        <div className="p-3 border-2 border-red-600 bg-red-50 text-red-900 font-mono-tech text-xs">
           {localError}
         </div>
       )}
@@ -104,19 +107,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Email Address
+          <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+            Email Node Identifier
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#18181a]/40" />
             <input
               type="email"
               required
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@domain.com"
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="operator@system.node"
+              className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-xs text-[#18181a] placeholder:text-[#18181a]/30 focus:outline-none focus:border-[#0047ff] transition"
             />
           </div>
         </div>
@@ -124,32 +127,32 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         {/* Password */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-              Password
+            <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60">
+              Access Cipher
             </label>
             <button
               type="button"
               onClick={() => onOpenForgotPassword(email)}
-              className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              className="font-mono-tech text-[10px] text-[#0047ff] font-bold hover:underline cursor-pointer"
             >
-              Forgot password?
+              [FORGOT_CIPHER]
             </button>
           </div>
           <div className="relative">
-            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#18181a]/40" />
             <input
               type={showPassword ? 'text' : 'password'}
               required
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="••••••••••••"
+              className="w-full pl-10 pr-10 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-xs text-[#18181a] placeholder:text-[#18181a]/30 focus:outline-none focus:border-[#0047ff] transition"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#18181a]/50 hover:text-[#18181a] p-1 cursor-pointer"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -157,15 +160,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </div>
 
         {/* Remember me */}
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between pt-1">
+          <label className="flex items-center gap-2 cursor-pointer select-none font-mono-tech text-[11px] text-[#18181a]/70">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600 border-gray-300 focus:ring-blue-500"
+              className="w-4 h-4 rounded-none accent-[#18181a] border-[#18181a]"
             />
-            <span>Remember my email</span>
+            <span>PERSIST_NODE_IDENTITY</span>
           </label>
         </div>
 
@@ -173,27 +176,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] disabled:opacity-50 text-white font-semibold rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-3.5 px-6 bg-[#18181a] hover:bg-[#0047ff] disabled:opacity-50 text-white font-display font-semibold uppercase tracking-wider text-base transition cursor-pointer text-center block"
         >
           {loading ? (
-            <>
+            <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Signing in...
-            </>
+              VERIFYING_CREDENTIALS...
+            </span>
           ) : (
-            <>
-              <LogIn className="w-4 h-4" />
-              Sign In to Account
-            </>
+            'AUTHENTICATE_IDENTITY'
           )}
         </button>
       </form>
 
       {/* Divider */}
-      <div className="relative flex items-center justify-center">
-        <div className="border-t border-gray-200 dark:border-gray-800 w-full" />
-        <span className="bg-white dark:bg-gray-900 px-3 text-xs text-gray-400 uppercase tracking-wider relative">
-          Or continue with
+      <div className="relative flex items-center justify-center my-4">
+        <div className="border-t border-[#18181a]/15 w-full" />
+        <span className="bg-white px-3 font-mono-tech text-[10px] text-[#18181a]/50 uppercase tracking-widest relative">
+          ALTERNATIVE_VECTOR
         </span>
       </div>
 
@@ -202,7 +202,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         type="button"
         onClick={handleGoogleLogin}
         disabled={googleLoading}
-        className="w-full py-2.5 px-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/80 active:scale-[0.99] border border-gray-300 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 shadow-xs flex items-center justify-center gap-2.5 cursor-pointer transition"
+        className="w-full py-3 px-4 bg-transparent hover:bg-[#18181a] hover:text-white border-2 border-[#18181a] font-display font-semibold uppercase tracking-wider text-sm text-[#18181a] transition flex items-center justify-center gap-3 cursor-pointer"
       >
         {googleLoading ? (
           <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
@@ -226,18 +226,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             />
           </svg>
         )}
-        <span>Google Account</span>
+        <span>GOOGLE_AUTH_POPUP</span>
       </button>
 
       {/* Switch to Register */}
-      <div className="pt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-        Don't have an account yet?{' '}
+      <div className="pt-2 text-center font-mono-tech text-xs text-[#18181a]/60">
+        NO_RECORD_FOUND?{' '}
         <button
           type="button"
           onClick={onSwitchToRegister}
-          className="text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer"
+          className="text-[#0047ff] font-bold hover:underline cursor-pointer"
         >
-          Create account
+          INITIALIZE_REGISTRATION
         </button>
       </div>
     </div>

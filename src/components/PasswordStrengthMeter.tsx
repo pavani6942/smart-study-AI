@@ -7,8 +7,8 @@ interface PasswordStrengthMeterProps {
 }
 
 export interface PasswordAnalysis {
-  score: number; // 0 - 4
-  label: 'Very Weak' | 'Weak' | 'Fair' | 'Good' | 'Strong';
+  score: number; // 0 - 5
+  label: 'VERY_WEAK' | 'WEAK' | 'MODERATE' | 'SUFFICIENT' | 'HARDENED';
   color: string;
   hasMinLength: boolean;
   hasLower: boolean;
@@ -31,14 +31,14 @@ export function evaluatePassword(password: string): PasswordAnalysis {
   if (hasNumber) passedCount++;
   if (hasSpecial) passedCount++;
 
-  let label: PasswordAnalysis['label'] = 'Very Weak';
-  let color = 'bg-red-500';
+  let label: PasswordAnalysis['label'] = 'VERY_WEAK';
+  let color = 'bg-red-600';
 
   if (password.length === 0) {
     return {
       score: 0,
-      label: 'Very Weak',
-      color: 'bg-gray-200 dark:bg-gray-700',
+      label: 'VERY_WEAK',
+      color: 'bg-transparent',
       hasMinLength: false,
       hasLower: false,
       hasUpper: false,
@@ -48,17 +48,17 @@ export function evaluatePassword(password: string): PasswordAnalysis {
   }
 
   if (passedCount <= 2) {
-    label = 'Weak';
-    color = 'bg-red-500';
+    label = 'WEAK';
+    color = 'bg-red-600';
   } else if (passedCount === 3) {
-    label = 'Fair';
+    label = 'MODERATE';
     color = 'bg-amber-500';
   } else if (passedCount === 4) {
-    label = 'Good';
-    color = 'bg-blue-500';
+    label = 'SUFFICIENT';
+    color = 'bg-[#0047ff]';
   } else {
-    label = 'Strong';
-    color = 'bg-emerald-500';
+    label = 'HARDENED';
+    color = 'bg-[#18181a]';
   }
 
   return {
@@ -85,42 +85,43 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
     <div className="mt-2 space-y-2">
       {/* Strength Bar */}
       <div className="space-y-1">
-        <div className="flex justify-between items-center text-xs">
-          <span className="text-gray-500 dark:text-gray-400">Password Strength:</span>
-          <span className={`font-semibold ${
-            analysis.label === 'Strong' ? 'text-emerald-600 dark:text-emerald-400' :
-            analysis.label === 'Good' ? 'text-blue-600 dark:text-blue-400' :
-            analysis.label === 'Fair' ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'
+        <div className="flex justify-between items-center font-mono-tech text-[10px]">
+          <span className="text-[#18181a]/60 uppercase tracking-wider">ENTROPY_RATING:</span>
+          <span className={`font-bold tracking-wider ${
+            analysis.label === 'HARDENED' ? 'text-[#18181a]' :
+            analysis.label === 'SUFFICIENT' ? 'text-[#0047ff]' :
+            analysis.label === 'MODERATE' ? 'text-amber-600' : 'text-red-600'
           }`}>
-            {analysis.label}
+            [{analysis.label}]
           </span>
         </div>
-        <div className="grid grid-cols-4 gap-1.5 h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden p-0.5">
-          <div className={`h-full rounded-full transition-all duration-300 ${analysis.score >= 1 ? analysis.color : 'bg-transparent'}`} />
-          <div className={`h-full rounded-full transition-all duration-300 ${analysis.score >= 3 ? analysis.color : 'bg-transparent'}`} />
-          <div className={`h-full rounded-full transition-all duration-300 ${analysis.score >= 4 ? analysis.color : 'bg-transparent'}`} />
-          <div className={`h-full rounded-full transition-all duration-300 ${analysis.score >= 5 ? analysis.color : 'bg-transparent'}`} />
+        <div className="grid grid-cols-5 gap-1 h-1.5 w-full bg-[#18181a]/10 p-0.5">
+          <div className={`h-full transition-all duration-300 ${analysis.score >= 1 ? analysis.color : 'bg-transparent'}`} />
+          <div className={`h-full transition-all duration-300 ${analysis.score >= 2 ? analysis.color : 'bg-transparent'}`} />
+          <div className={`h-full transition-all duration-300 ${analysis.score >= 3 ? analysis.color : 'bg-transparent'}`} />
+          <div className={`h-full transition-all duration-300 ${analysis.score >= 4 ? analysis.color : 'bg-transparent'}`} />
+          <div className={`h-full transition-all duration-300 ${analysis.score >= 5 ? analysis.color : 'bg-transparent'}`} />
         </div>
       </div>
 
       {/* Rules Checklist */}
       {showRules && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] pt-1 text-gray-500 dark:text-gray-400">
-          <div className={`flex items-center gap-1.5 ${analysis.hasMinLength ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
-            {analysis.hasMinLength ? <Check className="w-3 h-3 text-emerald-500 shrink-0" /> : <X className="w-3 h-3 text-gray-400 shrink-0" />}
-            <span>At least 8 characters</span>
+        <div className="grid grid-cols-2 gap-1 font-mono-tech text-[10px] pt-1 text-[#18181a]/60">
+          <div className={`flex items-center gap-1.5 ${analysis.hasMinLength ? 'text-[#0047ff] font-bold' : ''}`}>
+            {analysis.hasMinLength ? <Check className="w-3 h-3 text-[#0047ff] shrink-0" /> : <X className="w-3 h-3 text-[#18181a]/30 shrink-0" />}
+            <span>MIN_8_CHARS</span>
           </div>
-          <div className={`flex items-center gap-1.5 ${analysis.hasUpper && analysis.hasLower ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
-            {analysis.hasUpper && analysis.hasLower ? <Check className="w-3 h-3 text-emerald-500 shrink-0" /> : <X className="w-3 h-3 text-gray-400 shrink-0" />}
-            <span>Upper & lowercase</span>
+          <div className={`flex items-center gap-1.5 ${analysis.hasUpper && analysis.hasLower ? 'text-[#0047ff] font-bold' : ''}`}>
+            {analysis.hasUpper && analysis.hasLower ? <Check className="w-3 h-3 text-[#0047ff] shrink-0" /> : <X className="w-3 h-3 text-[#18181a]/30 shrink-0" />}
+            <span>MIXED_CASE</span>
           </div>
-          <div className={`flex items-center gap-1.5 ${analysis.hasNumber ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
-            {analysis.hasNumber ? <Check className="w-3 h-3 text-emerald-500 shrink-0" /> : <X className="w-3 h-3 text-gray-400 shrink-0" />}
-            <span>At least 1 number</span>
+          <div className={`flex items-center gap-1.5 ${analysis.hasNumber ? 'text-[#0047ff] font-bold' : ''}`}>
+            {analysis.hasNumber ? <Check className="w-3 h-3 text-[#0047ff] shrink-0" /> : <X className="w-3 h-3 text-[#18181a]/30 shrink-0" />}
+            <span>NUMERIC_DIGIT</span>
           </div>
-          <div className={`flex items-center gap-1.5 ${analysis.hasSpecial ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
-            {analysis.hasSpecial ? <Check className="w-3 h-3 text-emerald-500 shrink-0" /> : <X className="w-3 h-3 text-gray-400 shrink-0" />}
-            <span>Special character (@, $, !, etc.)</span>
+          <div className={`flex items-center gap-1.5 ${analysis.hasSpecial ? 'text-[#0047ff] font-bold' : ''}`}>
+            {analysis.hasSpecial ? <Check className="w-3 h-3 text-[#0047ff] shrink-0" /> : <X className="w-3 h-3 text-[#18181a]/30 shrink-0" />}
+            <span>SPECIAL_SYMBOL</span>
           </div>
         </div>
       )}

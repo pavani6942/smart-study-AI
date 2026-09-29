@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, CheckCircle, AlertCircle, ArrowLeft, X, Loader2, Sparkles } from 'lucide-react';
+import { CheckCircle, AlertCircle, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface ForgotPasswordModalProps {
@@ -24,7 +24,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError('Please enter your account email address.');
+      setError('ERROR: EMAIL_REQUIRED');
       return;
     }
 
@@ -34,7 +34,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       await sendPasswordReset(email.trim());
       setSubmittedEmail(email.trim());
     } catch (err: any) {
-      setError(err?.message || 'Failed to send password reset email.');
+      setError(err?.message || 'RESET_DISPATCH_FAILED');
     } finally {
       setIsSubmitting(false);
     }
@@ -47,122 +47,107 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
       <div 
-        className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-6 relative overflow-hidden"
+        className="w-full max-w-md bg-white border-2 border-[#18181a] p-6 md:p-8 shadow-[8px_8px_0px_#18181a] relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+          className="absolute top-4 right-4 text-[#18181a]/60 hover:text-[#18181a] p-1 border border-transparent hover:border-[#18181a] transition"
         >
           <X className="w-5 h-5" />
         </button>
 
         {submittedEmail ? (
-          <div className="text-center py-4 space-y-4">
-            <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950/60 rounded-full flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
-              <CheckCircle className="w-8 h-8" />
+          <div className="space-y-4">
+            <span className="font-mono-tech text-[10px] text-emerald-700 font-bold uppercase tracking-wider block">
+              STATUS: TRANSMISSION_SUCCESS
+            </span>
+
+            <h3 className="font-display font-bold text-3xl uppercase text-[#18181a]">
+              Cipher Reset Dispatched
+            </h3>
+
+            <p className="font-mono-tech text-xs text-[#18181a]/80">
+              A recovery token has been transmitted to node address:
+            </p>
+
+            <div className="font-mono-tech font-bold text-xs text-[#0047ff] bg-[#f8f7f4] p-3 border border-[#18181a]/20 break-all">
+              {submittedEmail}
             </div>
 
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Check Your Inbox</h3>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                We've sent a secure password reset link to:
-              </p>
-              <p className="mt-1 font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 py-1.5 px-3 rounded-lg inline-block font-mono text-xs">
-                {submittedEmail}
-              </p>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl p-3 text-xs text-blue-800 dark:text-blue-300 text-left space-y-1">
-              <div className="font-semibold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Next Steps:
-              </div>
-              <ul className="list-disc list-inside space-y-0.5 opacity-90">
-                <li>Click the link inside the Firebase email to choose a new password.</li>
-                <li>If not found in a minute, check your spam or promotions folder.</li>
-                <li>The reset link is active for 1 hour.</li>
-              </ul>
+            <div className="p-3 bg-[#18181a]/5 border border-[#18181a]/10 font-mono-tech text-[11px] text-[#18181a]/80 space-y-1">
+              <div>• Click the link within the transmission to assign a new cipher.</div>
+              <div>• Token expiration threshold: 3600 seconds.</div>
             </div>
 
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="w-1/2 py-2.5 px-4 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition"
+                className="w-1/2 py-2.5 border-2 border-[#18181a] font-display uppercase text-xs font-semibold hover:bg-gray-100"
               >
-                Try Another Email
+                RETRY_ADDRESS
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="w-1/2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm"
+                className="w-1/2 py-2.5 bg-[#18181a] text-white font-display uppercase text-xs font-semibold hover:bg-[#0047ff]"
               >
-                Back to Login
+                RETURN_TO_AUTH
               </button>
             </div>
           </div>
         ) : (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                <Mail className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Reset Password</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Enter your email to receive recovery instructions
-                </p>
-              </div>
+          <div className="space-y-4">
+            <div>
+              <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 block mb-1">
+                Recovery Protocol
+              </span>
+              <h3 className="font-display font-bold text-3xl uppercase text-[#18181a]">
+                Reset Cipher
+              </h3>
+              <p className="font-mono-tech text-xs text-[#18181a]/70 mt-1">
+                Transmit a password reset link to your verified email
+              </p>
             </div>
 
             {error && (
-              <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{error}</span>
+              <div className="p-3 border-2 border-red-600 bg-red-50 text-red-900 font-mono-tech text-xs">
+                {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  Account Email Address
+                <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+                  Registered Node Address
                 </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="user@example.com"
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="operator@system.node"
+                  className="w-full px-4 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-xs text-[#18181a] focus:outline-none focus:border-[#0047ff] transition"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition"
+                  className="px-4 py-2.5 border-2 border-[#18181a] font-display uppercase text-xs font-semibold hover:bg-gray-100"
                 >
-                  Cancel
+                  CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm transition"
+                  className="px-5 py-2.5 bg-[#18181a] hover:bg-[#0047ff] text-white font-display uppercase text-xs font-semibold transition disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Send Reset Link'
-                  )}
+                  {isSubmitting ? 'DISPATCHING...' : 'DISPATCH_RESET_LINK'}
                 </button>
               </div>
             </form>

@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+:root {
+  --bg: #f8f7f4;
+  --ink: #18181a;
+  --accent: #0047ff;
+  --ink-faint: rgba(24, 24, 26, 0.08);
+  --ink-muted: rgba(24, 24, 26, 0.6);
+  --surface: #ffffff;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.font-display {
+  font-family: 'Oswald', sans-serif;
+}
+
+.font-mono-tech {
+  font-family: 'Space Mono', monospace;
+}
+
+.grid-bg {
+  background-image: linear-gradient(rgba(24, 24, 26, 0.08) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(24, 24, 26, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.industrial-card {
+  background: #ffffff;
+  border: 2px solid #18181a;
+  box-shadow: 8px 8px 0px rgba(24, 24, 26, 0.08);
+}
+
+.industrial-card-black {
+  background: #18181a;
+  color: #ffffff;
+  border: 2px solid #18181a;
+  box-shadow: 8px 8px 0px rgba(24, 24, 26, 0.15);
+}

@@ -1,27 +1,18 @@
 import React, { useState } from 'react';
 import {
-  User as UserIcon,
   ShieldCheck,
   ShieldAlert,
   Mail,
-  Calendar,
-  Clock,
-  Key,
-  LogOut,
-  Trash2,
-  Edit2,
+  Copy,
   Check,
-  X,
   RefreshCw,
   Send,
-  AlertCircle,
-  Copy,
-  Lock,
-  History,
-  Sparkles,
-  ExternalLink,
-  ChevronRight,
   Loader2,
+  ExternalLink,
+  Lock,
+  Trash2,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getActiveFirebaseConfig } from '../services/firebase';
@@ -49,10 +40,9 @@ export const Dashboard: React.FC = () => {
     deleteAccount,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'security' | 'activity'>('overview');
-  
-  // Profile edit states
-  const [isEditingName, setIsEditingName] = useState(false);
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PROFILE_DETAILS' | 'SECURITY_PROTOCOL' | 'AUDIT_HISTORY'>('OVERVIEW');
+
+  // Profile states
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [selectedAvatar, setSelectedAvatar] = useState(user?.photoURL || AVATAR_OPTIONS[0]);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -80,9 +70,13 @@ export const Dashboard: React.FC = () => {
   if (!user) return null;
 
   const config = getActiveFirebaseConfig();
-  const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleString() : 'N/A';
-  const lastSignInTime = user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleString() : 'N/A';
-  const providerId = user.providerData?.[0]?.providerId || 'password';
+  const creationDate = user.metadata.creationTime
+    ? new Date(user.metadata.creationTime).toISOString().split('T')[0].replace(/-/g, '.')
+    : '2026.09.26';
+  const lastSignIn = user.metadata.lastSignInTime
+    ? new Date(user.metadata.lastSignInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : 'N/A';
+  const providerId = user.providerData?.[0]?.providerId === 'google.com' ? 'GOOGLE_OAUTH' : 'EMAIL_PASSWORD';
 
   const handleCopyUid = () => {
     navigator.clipboard.writeText(user.uid);
@@ -96,10 +90,9 @@ export const Dashboard: React.FC = () => {
     setProfileMessage(null);
     try {
       await updateUserProfile(displayName, selectedAvatar);
-      setIsEditingName(false);
-      setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setProfileMessage({ type: 'success', text: 'PROFILE_UPDATED_SUCCESSFULLY' });
     } catch (err: any) {
-      setProfileMessage({ type: 'error', text: err?.message || 'Failed to update profile.' });
+      setProfileMessage({ type: 'error', text: err?.message || 'PROFILE_UPDATE_FAILED' });
     } finally {
       setProfileSaving(false);
     }
@@ -110,22 +103,22 @@ export const Dashboard: React.FC = () => {
     setPasswordMessage(null);
 
     if (newPassword.length < 6) {
-      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters.' });
+      setPasswordMessage({ type: 'error', text: 'PASSWORD_MIN_LENGTH_VIOLATION: MIN 6 CHARACTERS' });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: 'error', text: 'Passwords do not match.' });
+      setPasswordMessage({ type: 'error', text: 'PASSWORD_MISMATCH: VERIFY BOTH ENTRIES' });
       return;
     }
 
     setPasswordSaving(true);
     try {
       await updateUserPassword(newPassword);
-      setPasswordMessage({ type: 'success', text: 'Password successfully changed!' });
+      setPasswordMessage({ type: 'success', text: 'PASSWORD_UPDATED_AND_ENCRYPTED' });
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setPasswordMessage({ type: 'error', text: err?.message || 'Could not update password.' });
+      setPasswordMessage({ type: 'error', text: err?.message || 'PASSWORD_CHANGE_REJECTED' });
     } finally {
       setPasswordSaving(false);
     }
@@ -137,12 +130,12 @@ export const Dashboard: React.FC = () => {
     try {
       const verified = await checkEmailVerificationStatus();
       if (verified) {
-        setVerificationFeedback('Email is verified! Security tier elevated to Verified.');
+        setVerificationFeedback('EMAIL_SYNC_VERIFIED: Full clearance activated.');
       } else {
-        setVerificationFeedback('Still pending. Click the link in your email to verify.');
+        setVerificationFeedback('EMAIL_SYNC_PENDING: Click the link inside the Firebase verification email.');
       }
     } catch (e: any) {
-      setVerificationFeedback('Error checking verification status.');
+      setVerificationFeedback('ERROR: Verification polling interrupted.');
     } finally {
       setCheckingVerification(false);
     }
@@ -153,9 +146,9 @@ export const Dashboard: React.FC = () => {
     setVerificationFeedback(null);
     try {
       await resendVerificationEmail();
-      setVerificationFeedback(`Verification email resent to ${user.email}!`);
+      setVerificationFeedback(`VERIFICATION_DISPATCHED to ${user.email}`);
     } catch (err: any) {
-      setVerificationFeedback(err?.message || 'Failed to resend email.');
+      setVerificationFeedback(err?.message || 'DISPATCH_FAILURE: Could not resend email.');
     } finally {
       setResendingVerification(false);
     }
@@ -167,438 +160,358 @@ export const Dashboard: React.FC = () => {
     try {
       await deleteAccount();
     } catch (err: any) {
-      alert(err?.message || 'Failed to delete account.');
+      alert(err?.message || 'TERMINATION_ERROR');
       setDeleting(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      {/* Top Profile Summary Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <img
-                src={user.photoURL || selectedAvatar}
-                alt="Avatar"
-                className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700 object-cover"
-              />
-              <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-white ${
-                isEmailVerified ? 'bg-emerald-500' : 'bg-amber-500'
-              }`}>
-                {isEmailVerified ? <Check className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
-              </span>
-            </div>
+    <div className="w-full flex-1 flex flex-col md:grid md:grid-cols-[280px_1fr_300px] lg:grid-cols-[320px_1fr_320px] overflow-hidden bg-[#f8f7f4]">
+      {/* LEFT PANEL: NAVIGATION */}
+      <aside className="border-r border-[#18181a]/10 p-6 md:p-8 flex flex-col bg-[#f8f7f4]">
+        <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 mb-4 block">
+          Navigation
+        </span>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {user.displayName || 'Firebase User'}
-                </h1>
-                {isEmailVerified ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    Verified Email
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    Unverified Email
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-mono mt-0.5">
-                {user.email}
-              </p>
-              <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded font-medium">
-                  Provider: {providerId}
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  UID: <span className="font-mono">{user.uid.slice(0, 10)}...</span>
-                  <button
-                    onClick={handleCopyUid}
-                    className="hover:text-gray-800 dark:hover:text-gray-200 p-0.5"
-                    title="Copy full UID"
-                  >
-                    {copiedUid ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                  </button>
-                </span>
-              </div>
-            </div>
+        <nav className="space-y-1">
+          <button
+            onClick={() => setActiveTab('OVERVIEW')}
+            className={`w-full text-left font-semibold text-sm py-3 border-b-2 transition uppercase cursor-pointer block ${
+              activeTab === 'OVERVIEW'
+                ? 'text-[#0047ff] border-[#0047ff]'
+                : 'text-[#18181a] border-transparent hover:text-[#0047ff]'
+            }`}
+          >
+            OVERVIEW
+          </button>
+          <button
+            onClick={() => setActiveTab('PROFILE_DETAILS')}
+            className={`w-full text-left font-semibold text-sm py-3 border-b-2 transition uppercase cursor-pointer block ${
+              activeTab === 'PROFILE_DETAILS'
+                ? 'text-[#0047ff] border-[#0047ff]'
+                : 'text-[#18181a] border-transparent hover:text-[#0047ff]'
+            }`}
+          >
+            PROFILE_DETAILS
+          </button>
+          <button
+            onClick={() => setActiveTab('SECURITY_PROTOCOL')}
+            className={`w-full text-left font-semibold text-sm py-3 border-b-2 transition uppercase cursor-pointer block ${
+              activeTab === 'SECURITY_PROTOCOL'
+                ? 'text-[#0047ff] border-[#0047ff]'
+                : 'text-[#18181a] border-transparent hover:text-[#0047ff]'
+            }`}
+          >
+            SECURITY_PROTOCOL
+          </button>
+          <button
+            onClick={() => setActiveTab('AUDIT_HISTORY')}
+            className={`w-full text-left font-semibold text-sm py-3 border-b-2 transition uppercase cursor-pointer block ${
+              activeTab === 'AUDIT_HISTORY'
+                ? 'text-[#0047ff] border-[#0047ff]'
+                : 'text-[#18181a] border-transparent hover:text-[#0047ff]'
+            }`}
+          >
+            AUDIT_HISTORY
+          </button>
+        </nav>
+
+        {/* Quick status summary in nav */}
+        <div className="mt-8 p-4 border border-[#18181a]/15 bg-white text-xs space-y-2">
+          <span className="font-mono-tech text-[9px] uppercase tracking-wider text-[#18181a]/50 block">
+            VERIFICATION_FLAG
+          </span>
+          <div className="font-mono-tech font-bold text-xs flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${isEmailVerified ? 'bg-emerald-500' : 'bg-amber-500 animate-ping'}`} />
+            <span>{isEmailVerified ? 'STATUS_VERIFIED' : 'ACTION_REQUIRED'}</span>
           </div>
-
-          {/* Action buttons */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
-            {!isEmailVerified && (
-              <button
-                onClick={handleCheckVerification}
-                disabled={checkingVerification}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition cursor-pointer"
-              >
-                {checkingVerification ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-3.5 h-3.5" />
-                )}
-                Check Email Status
-              </button>
-            )}
-
+          {!isEmailVerified && (
             <button
-              onClick={() => logout()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              onClick={handleCheckVerification}
+              disabled={checkingVerification}
+              className="w-full mt-2 py-1.5 px-2 bg-[#18181a] text-white font-display uppercase text-xs hover:bg-[#0047ff] transition"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              Sign Out
+              {checkingVerification ? 'SYNCING...' : 'SYNC_VERIFICATION'}
             </button>
-          </div>
+          )}
         </div>
 
-        {verificationFeedback && (
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl text-xs text-blue-800 dark:text-blue-300 flex items-center justify-between">
-            <span>{verificationFeedback}</span>
-            <button
-              onClick={() => setVerificationFeedback(null)}
-              className="text-blue-600 dark:text-blue-400 font-medium hover:underline text-xs"
+        <div className="mt-auto pt-8">
+          <button
+            onClick={() => logout()}
+            className="w-full bg-transparent text-[#18181a] border-2 border-[#18181a] py-3 px-4 font-display font-semibold uppercase tracking-wider text-sm hover:bg-[#18181a] hover:text-white transition cursor-pointer text-center block"
+          >
+            TERMINATE_SESSION
+          </button>
+        </div>
+      </aside>
+
+      {/* CENTER PANEL: CORE CONTENT */}
+      <section className="p-6 md:p-10 lg:p-12 grid-bg overflow-y-auto">
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === 'OVERVIEW' && (
+          <div className="max-w-3xl space-y-6">
+            <div className="inline-block px-3 py-1 bg-[#18181a] text-white font-mono-tech text-[10px] tracking-wider uppercase">
+              PROTOCOL: SECURE_AUTH
+            </div>
+
+            <h1
+              style={{ color: '#171719' }}
+              className="font-display font-bold text-5xl md:text-7xl uppercase tracking-tighter text-[#171719] leading-[0.85] my-4"
             >
-              Dismiss
-            </button>
-          </div>
-        )}
-      </div>
+              {isEmailVerified ? (
+                <>
+                  Verified<br />Identity
+                </>
+              ) : (
+                <>
+                  Unverified<br />Identity
+                </>
+              )}
+            </h1>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-800 gap-6 text-sm font-medium">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`pb-3 border-b-2 transition flex items-center gap-2 cursor-pointer ${
-            activeTab === 'overview'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-semibold'
-              : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
-        >
-          <Sparkles className="w-4 h-4" />
-          Overview & Security
-        </button>
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`pb-3 border-b-2 transition flex items-center gap-2 cursor-pointer ${
-            activeTab === 'profile'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-semibold'
-              : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
-        >
-          <UserIcon className="w-4 h-4" />
-          Profile Details
-        </button>
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`pb-3 border-b-2 transition flex items-center gap-2 cursor-pointer ${
-            activeTab === 'security'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-semibold'
-              : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
-        >
-          <Key className="w-4 h-4" />
-          Password & Auth
-        </button>
-        <button
-          onClick={() => setActiveTab('activity')}
-          className={`pb-3 border-b-2 transition flex items-center gap-2 cursor-pointer ${
-            activeTab === 'activity'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-semibold'
-              : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          Audit & Activities
-        </button>
-      </div>
+            <div className="h-[2px] bg-[#18181a] w-12 my-6" />
 
-      {/* Tab 1: Overview */}
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Column 1 & 2: Verification Status and Account Health */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Email Verification Card */}
-            <div className={`p-6 rounded-2xl border ${
-              isEmailVerified
-                ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
-                : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800'
-            }`}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className={`p-2.5 rounded-xl ${
-                    isEmailVerified
-                      ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
-                  }`}>
-                    {isEmailVerified ? <ShieldCheck className="w-6 h-6" /> : <Mail className="w-6 h-6" />}
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                      {isEmailVerified ? 'Email Verification Confirmed' : 'Email Verification Incomplete'}
+            {/* Email verification pending notice if not verified */}
+            {!isEmailVerified && (
+              <div className="industrial-card p-6 bg-amber-50 border-amber-500 border-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <span className="font-mono-tech text-[10px] uppercase tracking-wider text-amber-900 font-bold block">
+                      SECURITY_WARNING: VERIFICATION_INCOMPLETE
+                    </span>
+                    <h3 className="font-display font-bold text-2xl uppercase text-[#18181a]">
+                      Confirmation Link Dispatched
                     </h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
-                      {isEmailVerified
-                        ? 'Your email address has been authenticated via Firebase. You have full trusted access to protected operations and data.'
-                        : 'Your email address has not been confirmed yet. A verification email was generated for this account.'}
+                    <p className="text-xs text-[#18181a]/80 font-mono-tech">
+                      A verification email was sent to <strong className="text-[#0047ff]">{user.email}</strong>. Please click the link inside your inbox.
                     </p>
                   </div>
-                </div>
-
-                {!isEmailVerified && (
                   <button
                     onClick={handleResendVerification}
                     disabled={resendingVerification || resendCooldown > 0}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium shadow-xs disabled:opacity-50 transition shrink-0 cursor-pointer"
+                    className="bg-[#18181a] text-white px-4 py-2 font-display uppercase text-xs hover:bg-[#0047ff] transition shrink-0 disabled:opacity-50"
                   >
-                    {resendingVerification ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Send className="w-3.5 h-3.5" />
-                    )}
-                    {resendCooldown > 0 ? `Wait ${resendCooldown}s` : 'Resend Link'}
+                    {resendingVerification ? 'SENDING...' : resendCooldown > 0 ? `WAIT ${resendCooldown}S` : 'RESEND_LINK'}
                   </button>
-                )}
-              </div>
-
-              {!isEmailVerified && (
-                <div className="mt-4 pt-4 border-t border-amber-200/80 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-1">
-                  <div className="font-semibold flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                    How to complete verification:
-                  </div>
-                  <ol className="list-decimal list-inside space-y-1 text-gray-700 dark:text-gray-300">
-                    <li>Open your mailbox (<span className="font-mono font-medium">{user.email}</span>)</li>
-                    <li>Look for email from <span className="font-mono">noreply@{config.projectId}.firebaseapp.com</span></li>
-                    <li>Click the confirmation link</li>
-                    <li>Return here and click the <strong>"Check Email Status"</strong> button above</li>
-                  </ol>
                 </div>
-              )}
-            </div>
 
-            {/* Account Details Metadata */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4">
-              <h3 className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                Account Timestamps & Identifiers
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-500 dark:text-gray-400 block mb-1">Account Created:</span>
-                  <span className="font-semibold text-gray-800 dark:text-gray-200 font-mono">
-                    {creationTime}
+                <div className="mt-4 pt-3 border-t border-amber-200 flex items-center justify-between">
+                  <span className="text-[11px] text-amber-950 font-mono-tech">
+                    Already clicked the link?
                   </span>
-                </div>
-
-                <div className="p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-500 dark:text-gray-400 block mb-1">Last Sign In:</span>
-                  <span className="font-semibold text-gray-800 dark:text-gray-200 font-mono">
-                    {lastSignInTime}
-                  </span>
-                </div>
-
-                <div className="p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-500 dark:text-gray-400 block mb-1">Firebase Project ID:</span>
-                  <span className="font-semibold text-gray-800 dark:text-gray-200 font-mono">
-                    {config.projectId}
-                  </span>
-                </div>
-
-                <div className="p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-500 dark:text-gray-400 block mb-1">Auth Domain:</span>
-                  <span className="font-semibold text-gray-800 dark:text-gray-200 font-mono">
-                    {config.authDomain}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Column 3: Security Score & Quick Actions */}
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4">
-              <h3 className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                Security Health
-              </h3>
-
-              <div className="space-y-3 text-xs">
-                <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800/60 rounded-xl">
-                  <span>Email Verification</span>
-                  {isEmailVerified ? (
-                    <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> Passed
-                    </span>
-                  ) : (
-                    <span className="text-amber-500 font-semibold flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" /> Pending
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800/60 rounded-xl">
-                  <span>Firebase Auth Provider</span>
-                  <span className="font-semibold text-gray-700 dark:text-gray-300">
-                    {providerId === 'google.com' ? 'Google OAuth' : 'Email & Password'}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800/60 rounded-xl">
-                  <span>Session State</span>
-                  <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                    <Check className="w-3.5 h-3.5" /> Active & Synced
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
-                <a
-                  href={`https://console.firebase.google.com/project/${config.projectId}/authentication/users`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl text-gray-700 dark:text-gray-300 font-medium transition"
-                >
-                  View User in Firebase Console
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 2: Profile Details */}
-      {activeTab === 'profile' && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 max-w-2xl space-y-6">
-          <div>
-            <h3 className="text-base font-bold text-gray-900 dark:text-white">Profile Settings</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Update your display name and avatar stored on Firebase Auth profile
-            </p>
-          </div>
-
-          {profileMessage && (
-            <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-              profileMessage.type === 'success'
-                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200'
-                : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200'
-            }`}>
-              {profileMessage.type === 'success' ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-red-600" />}
-              <span>{profileMessage.text}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            {/* Avatar picker */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
-                Choose Avatar
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {AVATAR_OPTIONS.map((avatarUrl, idx) => (
                   <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedAvatar(avatarUrl)}
-                    className={`w-12 h-12 rounded-xl p-1 border-2 transition cursor-pointer ${
-                      selectedAvatar === avatarUrl
-                        ? 'border-blue-600 scale-105 shadow-xs'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                    }`}
+                    onClick={handleCheckVerification}
+                    disabled={checkingVerification}
+                    className="border border-[#18181a] bg-white px-3 py-1 font-display uppercase text-xs font-semibold hover:bg-[#18181a] hover:text-white transition"
                   >
-                    <img src={avatarUrl} alt="Avatar option" className="w-full h-full object-cover" />
+                    {checkingVerification ? 'CHECKING...' : 'I_HAVE_VERIFIED'}
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Display Name */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                Display Name
-              </label>
-              <input
-                type="text"
-                required
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your Full Name"
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Email Address (Read-only) */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                Email Address
-              </label>
-              <input
-                type="email"
-                disabled
-                value={user.email || ''}
-                className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 font-mono cursor-not-allowed"
-              />
-              <span className="text-[11px] text-gray-400 mt-1 block">
-                Email address is tied to your Firebase Auth identity.
-              </span>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={profileSaving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs disabled:opacity-50 transition cursor-pointer"
-              >
-                {profileSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Updating Profile...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Save Profile Changes
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Tab 3: Security & Password */}
-      {activeTab === 'security' && (
-        <div className="space-y-6 max-w-2xl">
-          {/* Change Password Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4">
-            <div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">Change Account Password</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Update your Firebase authentication password
-              </p>
-            </div>
-
-            {passwordMessage && (
-              <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-                passwordMessage.type === 'success'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200'
-                  : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200'
-              }`}>
-                {passwordMessage.type === 'success' ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-red-600" />}
-                <span>{passwordMessage.text}</span>
+                </div>
               </div>
             )}
 
-            <form onSubmit={handleChangePassword} className="space-y-4">
+            {/* User Descriptor Card */}
+            <div className="industrial-card p-6 md:p-8">
+              <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 mb-2 block">
+                User Descriptor
+              </span>
+              <h2 className="font-display font-bold text-3xl md:text-4xl uppercase text-[#18181a] mb-1">
+                {user.displayName || user.email?.split('@')[0] || 'AUTHORIZED_ENTITY'}
+              </h2>
+              <div className="font-mono-tech text-sm font-bold text-[#0047ff]">
+                {user.email}
+              </div>
+
+              <div className="border-t border-[#18181a]/10 pt-6 mt-6">
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <span className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1">
+                      Auth Provider
+                    </span>
+                    <div className="font-mono-tech font-bold text-sm text-[#18181a]">
+                      {providerId}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1">
+                      Creation Date
+                    </span>
+                    <div className="font-mono-tech font-bold text-sm text-[#18181a]">
+                      {creationDate}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setActiveTab('PROFILE_DETAILS')}
+                  style={{ color: '#ffffff' }}
+                  className="w-full bg-[#18181a] text-white py-3.5 px-6 font-display font-semibold uppercase text-base hover:bg-[#0047ff] transition cursor-pointer text-center block"
+                >
+                  MODIFY_CREDENTIALS
+                </button>
+              </div>
+            </div>
+
+            {/* Protection Index & Verified Status grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div
+                style={{
+                  fontStyle: 'normal',
+                  fontWeight: 'normal',
+                  textDecorationLine: 'underline',
+                  textAlign: 'justify',
+                }}
+                className="industrial-card p-6"
+              >
+                <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 mb-2 block">
+                  Protection Index
+                </span>
+                <div className="font-display font-bold text-5xl text-[#18181a]">
+                  {isEmailVerified ? '100%' : '65%'}
+                </div>
+                <div
+                  style={{ borderColor: '#17171b' }}
+                  className="font-mono-tech text-[11px] text-[#18181a]/60 mt-1"
+                >
+                  {isEmailVerified ? 'AUTHENTICATION_SECURE' : 'PENDING_EMAIL_VERIFICATION'}
+                </div>
+              </div>
+
+              <div className="industrial-card-black p-6">
+                <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-white/50 mb-2 block">
+                  Verified Status
+                </span>
+                <div className="font-display font-bold text-2xl text-white">
+                  {isEmailVerified ? 'EMAIL_SYNC_TRUE' : 'EMAIL_SYNC_FALSE'}
+                </div>
+                <div className="font-mono-tech text-[11px] text-white/60 mt-1">
+                  NODE: {config.projectId}
+                </div>
+              </div>
+            </div>
+
+            {verificationFeedback && (
+              <div className="p-3 bg-[#18181a] text-white font-mono-tech text-xs border border-[#18181a] flex items-center justify-between">
+                <span>{verificationFeedback}</span>
+                <button
+                  onClick={() => setVerificationFeedback(null)}
+                  className="text-[#0047ff] hover:underline font-bold text-[10px]"
+                >
+                  [DISMISS]
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: PROFILE DETAILS */}
+        {activeTab === 'PROFILE_DETAILS' && (
+          <div className="max-w-2xl space-y-6">
+            <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 block">
+              Configuration Module
+            </span>
+            <h1 className="font-display font-bold text-4xl uppercase text-[#18181a]">
+              User Profile
+            </h1>
+
+            {profileMessage && (
+              <div className={`p-3 font-mono-tech text-xs border-2 ${
+                profileMessage.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-600 text-emerald-900'
+                  : 'bg-red-50 border-red-600 text-red-900'
+              }`}>
+                {profileMessage.text}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveProfile} className="industrial-card p-6 md:p-8 space-y-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                <span className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-2">
+                  Select Visual Identifier
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  {AVATAR_OPTIONS.map((avatarUrl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedAvatar(avatarUrl)}
+                      className={`w-14 h-14 p-1 border-2 transition cursor-pointer bg-white ${
+                        selectedAvatar === avatarUrl
+                          ? 'border-[#0047ff] shadow-[4px_4px_0px_#0047ff]'
+                          : 'border-[#18181a]/30 hover:border-[#18181a]'
+                      }`}
+                    >
+                      <img src={avatarUrl} alt="Avatar seed" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+                  Display Identifier (Full Name)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="e.g. Pogiri Pavani"
+                  className="w-full px-4 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-sm text-[#18181a] focus:outline-none focus:border-[#0047ff] transition"
+                />
+              </div>
+
+              <div>
+                <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+                  Registered Node Address (Email)
+                </label>
+                <input
+                  type="email"
+                  disabled
+                  value={user.email || ''}
+                  className="w-full px-4 py-3 bg-[#f8f7f4] border-2 border-[#18181a]/30 font-mono-tech text-sm text-[#18181a]/60 cursor-not-allowed"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={profileSaving}
+                className="w-full bg-[#18181a] text-white py-3.5 px-6 font-display font-semibold uppercase text-base hover:bg-[#0047ff] transition cursor-pointer"
+              >
+                {profileSaving ? 'SAVING_CHANGES...' : 'APPLY_PROFILE_MUTATIONS'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* TAB 3: SECURITY PROTOCOL */}
+        {activeTab === 'SECURITY_PROTOCOL' && (
+          <div className="max-w-2xl space-y-6">
+            <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 block">
+              Cryptographic Module
+            </span>
+            <h1 className="font-display font-bold text-4xl uppercase text-[#18181a]">
+              Security Protocol
+            </h1>
+
+            {passwordMessage && (
+              <div className={`p-3 font-mono-tech text-xs border-2 ${
+                passwordMessage.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-600 text-emerald-900'
+                  : 'bg-red-50 border-red-600 text-red-900'
+              }`}>
+                {passwordMessage.text}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="industrial-card p-6 md:p-8 space-y-5">
+              <span className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block">
+                Update Cipher Phrase (Password)
+              </span>
+
+              <div>
+                <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
                   New Password
                 </label>
                 <input
@@ -606,14 +519,14 @@ export const Dashboard: React.FC = () => {
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Min 6 characters"
+                  className="w-full px-4 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-sm text-[#18181a] focus:outline-none focus:border-[#0047ff] transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  Confirm New Password
+                <label className="font-mono-tech text-[10px] uppercase tracking-wider text-[#18181a]/60 block mb-1.5">
+                  Confirm Password
                 </label>
                 <input
                   type="password"
@@ -621,153 +534,176 @@ export const Dashboard: React.FC = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat new password"
-                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 bg-white border-2 border-[#18181a] font-mono-tech text-sm text-[#18181a] focus:outline-none focus:border-[#0047ff] transition"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={passwordSaving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs disabled:opacity-50 transition cursor-pointer"
+                className="w-full bg-[#18181a] text-white py-3.5 px-6 font-display font-semibold uppercase text-base hover:bg-[#0047ff] transition cursor-pointer"
               >
-                {passwordSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Updating Password...
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4" />
-                    Update Password
-                  </>
-                )}
+                {passwordSaving ? 'HASHING_CIPHER...' : 'COMMIT_PASSWORD_UPDATE'}
               </button>
             </form>
+
+            {/* Danger zone */}
+            <div className="industrial-card p-6 border-red-600 border-2 bg-red-50/40">
+              <span className="font-mono-tech text-[10px] uppercase tracking-wider text-red-700 block mb-1 font-bold">
+                CRITICAL_ACTION_ZONE
+              </span>
+              <h3 className="font-display font-bold text-2xl uppercase text-[#18181a]">
+                Purge Account Record
+              </h3>
+              <p className="text-xs text-[#18181a]/80 font-mono-tech my-2">
+                Permanently eliminate user identity and revoke cloud authentication tokens on node {config.projectId}.
+              </p>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="mt-2 bg-red-600 text-white font-display uppercase px-5 py-2.5 text-sm hover:bg-red-700 transition cursor-pointer"
+              >
+                PURGE_IDENTITY
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Danger Zone: Account Deletion */}
-          <div className="bg-red-50/50 dark:bg-red-950/20 rounded-2xl p-6 border border-red-200 dark:border-red-900/60 space-y-3">
-            <h3 className="text-base font-bold text-red-900 dark:text-red-300 flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-600" />
-              Danger Zone: Delete Account
-            </h3>
-            <p className="text-xs text-red-800/80 dark:text-red-300/80 leading-relaxed">
-              Permanently delete this user record from Firebase Authentication. This action is irreversible.
-            </p>
+        {/* TAB 4: AUDIT HISTORY */}
+        {activeTab === 'AUDIT_HISTORY' && (
+          <div className="max-w-3xl space-y-6">
+            <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 block">
+              Telemetry Log
+            </span>
+            <div className="flex items-baseline justify-between">
+              <h1 className="font-display font-bold text-4xl uppercase text-[#18181a]">
+                Audit History
+              </h1>
+              <span className="font-mono-tech text-xs bg-[#18181a] text-white px-2 py-1">
+                COUNT: {activities.length}
+              </span>
+            </div>
 
+            <div className="industrial-card p-4 space-y-2">
+              {activities.length === 0 ? (
+                <div className="font-mono-tech text-xs text-[#18181a]/60 py-6 text-center">
+                  NO_TELEMETRY_LOGGED_YET
+                </div>
+              ) : (
+                <div className="divide-y divide-[#18181a]/10 font-mono-tech text-xs">
+                  {activities.map((act) => (
+                    <div key={act.id} className="py-3 flex items-start justify-between gap-4">
+                      <div>
+                        <div className="font-bold text-[#18181a] uppercase">
+                          [{act.type}] {act.title}
+                        </div>
+                        <div className="text-[#18181a]/70 text-[11px] mt-0.5">
+                          {act.description}
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-[#18181a]/50 shrink-0">
+                        {new Date(act.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* RIGHT PANEL: INFRASTRUCTURE & METADATA */}
+      <aside className="border-l border-[#1a141d] p-6 md:p-8 flex flex-col gap-6 bg-[#f8f7f4]">
+        {/* Infrastructure UID */}
+        <div>
+          <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 mb-2 block">
+            Infrastructure
+          </span>
+          <div className="industrial-card p-4 bg-white">
+            <div className="font-mono-tech text-xs font-bold text-[#18181a] break-all">
+              UID: {user.uid}
+            </div>
             <button
-              onClick={() => setShowDeleteModal(true)}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+              onClick={handleCopyUid}
+              className="mt-2 text-[10px] font-mono-tech text-[#0047ff] hover:underline flex items-center gap-1 font-bold"
             >
-              Delete Account
+              {copiedUid ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+              {copiedUid ? 'COPIED_TO_CLIPBOARD' : 'COPY_UID_HASH'}
             </button>
           </div>
         </div>
-      )}
 
-      {/* Tab 4: Activity & Audit Log */}
-      {activeTab === 'activity' && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">Security & Audit History</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Timestamped records of authentication and verification lifecycle events
-              </p>
-            </div>
-            <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full font-mono">
-              {activities.length} records
-            </span>
-          </div>
-
-          {activities.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 text-xs">
-              No recent security activity recorded yet.
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {activities.map((act) => (
-                <div key={act.id} className="py-3 flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-xl mt-0.5 ${
-                      act.type === 'verified'
-                        ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600'
-                        : act.type === 'verification_sent'
-                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-600'
-                        : act.type === 'password_change'
-                        ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-600'
-                        : 'bg-blue-100 dark:bg-blue-950/60 text-blue-600'
-                    }`}>
-                      {act.type === 'verified' ? (
-                        <ShieldCheck className="w-4 h-4" />
-                      ) : act.type === 'verification_sent' ? (
-                        <Mail className="w-4 h-4" />
-                      ) : act.type === 'password_change' ? (
-                        <Key className="w-4 h-4" />
-                      ) : (
-                        <Check className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-gray-900 dark:text-white">
-                        {act.title}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {act.description}
-                      </div>
-                    </div>
-                  </div>
-
-                  <span className="text-[11px] text-gray-400 shrink-0 font-mono">
-                    {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Project Mapping */}
+        <div>
+          <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 mb-2 block">
+            Project Mapping
+          </span>
+          <p className="text-xs font-mono-tech leading-relaxed text-[#18181a]/70">
+            All authentication flows are processed via the primary Firebase node at{' '}
+            <span className="font-bold text-[#0047ff]">{config.authDomain}</span>.
+          </p>
+          <a
+            href={`https://console.firebase.google.com/project/${config.projectId}/authentication`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block text-center bg-transparent text-[#18181a] border-2 border-[#18181a] py-2.5 px-4 font-display font-semibold uppercase text-xs hover:bg-[#18181a] hover:text-white transition"
+          >
+            CONSOLE_ACCESS
+          </a>
         </div>
-      )}
 
-      {/* Delete Confirmation Modal */}
+        {/* System Integrity */}
+        <div className="mt-auto bg-[#18181a]/5 border border-[#18181a]/10 p-4">
+          <span className="font-mono-tech text-[9px] uppercase tracking-[0.2em] text-[#18181a]/60 block mb-1">
+            System Integrity
+          </span>
+          <div className="font-mono-tech font-bold text-xs text-[#18181a]">
+            ACTIVE_SHIELD_V1
+          </div>
+          <div className="font-mono-tech text-[10px] text-[#18181a]/60 mt-1">
+            System reports 0 vulnerabilities.
+          </div>
+        </div>
+      </aside>
+
+      {/* Delete modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-2xl border border-red-200 dark:border-red-900/60 space-y-4">
-            <div className="flex items-center gap-2 text-red-600">
-              <Trash2 className="w-6 h-6" />
-              <h3 className="font-bold text-lg text-gray-900 dark:text-white">Delete User Account</h3>
-            </div>
-
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-              This will immediately delete this user account from Firebase Auth (<span className="font-mono">{user.email}</span>).
-              To confirm, type your email address below:
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border-2 border-[#18181a] p-6 shadow-[8px_8px_0px_#18181a] space-y-4">
+            <span className="font-mono-tech text-[10px] text-red-600 font-bold uppercase tracking-wider block">
+              WARNING: DESTRUCTIVE_OPERATION
+            </span>
+            <h3 className="font-display font-bold text-2xl uppercase text-[#18181a]">
+              Purge User Identity
+            </h3>
+            <p className="font-mono-tech text-xs text-[#18181a]/80">
+              Type <strong className="text-[#0047ff]">{user.email}</strong> to confirm identity deletion:
             </p>
-
             <input
               type="text"
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
               placeholder={user.email || ''}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-xs font-mono"
+              className="w-full px-3 py-2 border-2 border-[#18181a] font-mono-tech text-xs focus:outline-none"
             />
-
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => {
                   setShowDeleteModal(false);
                   setDeleteConfirmText('');
                 }}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-medium"
+                className="w-1/2 py-2 border-2 border-[#18181a] font-display uppercase text-xs font-semibold hover:bg-gray-100"
               >
-                Cancel
+                CANCEL
               </button>
               <button
                 type="button"
                 disabled={deleteConfirmText !== user.email || deleting}
                 onClick={handleDeleteAccount}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-semibold transition"
+                className="w-1/2 py-2 bg-red-600 text-white font-display uppercase text-xs font-semibold hover:bg-red-700 disabled:opacity-40"
               >
-                {deleting ? 'Deleting...' : 'Permanently Delete'}
+                {deleting ? 'PURGING...' : 'CONFIRM_PURGE'}
               </button>
             </div>
           </div>

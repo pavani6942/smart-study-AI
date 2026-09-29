@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
+import { Footer } from './components/Footer';
 import { EmailVerificationBanner } from './components/EmailVerificationBanner';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 import { ForgotPasswordModal } from './components/ForgotPasswordModal';
 import { ConfigSettingsModal } from './components/ConfigSettingsModal';
 import { Dashboard } from './components/Dashboard';
-import { ShieldCheck, Mail, CheckCircle2, Lock, Sparkles, ExternalLink, KeyRound, Info } from 'lucide-react';
 import { getActiveFirebaseConfig } from './services/firebase';
 
 const MainContent: React.FC = () => {
@@ -26,19 +26,17 @@ const MainContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center p-4">
-        <div className="w-12 h-12 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-600 animate-pulse">
-          <ShieldCheck className="w-7 h-7" />
-        </div>
-        <p className="mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Initializing Firebase Auth...
-        </p>
+      <div className="min-h-screen bg-[#f8f7f4] flex flex-col items-center justify-center p-6 text-[#18181a] font-mono-tech">
+        <div className="w-12 h-12 border-4 border-[#18181a] border-t-[#0047ff] animate-spin mb-4" />
+        <span className="text-xs uppercase tracking-widest font-bold">
+          INITIALIZING_CORE_SYSTEMS...
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-[#f8f7f4] text-[#18181a] flex flex-col font-sans">
       <Navbar onOpenConfig={() => setIsConfigModalOpen(true)} />
 
       {/* Email Verification Banner */}
@@ -48,97 +46,79 @@ const MainContent: React.FC = () => {
         {user ? (
           <Dashboard />
         ) : (
-          <div className="flex-1 flex items-center justify-center p-4 py-10">
-            <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* Left Info Column */}
+          <div className="flex-1 flex items-center justify-center p-6 md:p-12 grid-bg">
+            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Left Column: Industrial Descriptor */}
               <div className="lg:col-span-6 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/80 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 text-xs font-semibold">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Firebase Authentication Ready
+                <div className="inline-block px-3 py-1 bg-[#18181a] text-white font-mono-tech text-[10px] tracking-wider uppercase">
+                  PROTOCOL: SECURE_AUTH
                 </div>
 
                 <div className="space-y-2">
-                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white leading-tight">
-                    Secure User Management & Email Verification
+                  <h1 className="font-display font-bold text-5xl sm:text-6xl uppercase tracking-tighter text-[#18181a] leading-[0.88]">
+                    Identity<br />Gateway
                   </h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Production-grade registration and authentication flow configured with your Firebase project <span className="font-mono font-medium text-blue-600 dark:text-blue-400">fir-33d06</span>.
+                  <div className="h-[2px] bg-[#18181a] w-12 my-4" />
+                  <p className="font-mono-tech text-xs text-[#18181a]/70 leading-relaxed max-w-md">
+                    Automated user management, credential validation, and cryptographic email verification powered by node{' '}
+                    <span className="font-bold text-[#0047ff]">{config.projectId}</span>.
                   </p>
                 </div>
 
-                {/* Feature checklist */}
-                <div className="space-y-3 text-xs text-gray-600 dark:text-gray-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                    <span>
-                      <strong>Email Verification Dispatch:</strong> Sends an official verification link on sign-up with live reload sync.
-                    </span>
+                {/* Specs list */}
+                <div className="space-y-2 font-mono-tech text-xs text-[#18181a]/80">
+                  <div className="p-3 border border-[#18181a]/20 bg-white">
+                    <span className="font-bold text-[#0047ff] block mb-0.5">01 // EMAIL_VERIFICATION</span>
+                    Automatic link dispatch with real-time status synchronization
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    <span>
-                      <strong>Password Strength Validation:</strong> Real-time rules & entropy meter to prevent compromised credentials.
-                    </span>
+                  <div className="p-3 border border-[#18181a]/20 bg-white">
+                    <span className="font-bold text-[#0047ff] block mb-0.5">02 // ENTROPY_ENFORCEMENT</span>
+                    Multi-factor password strength analysis and hardened access rules
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                      <KeyRound className="w-4 h-4" />
-                    </div>
-                    <span>
-                      <strong>Password Reset & Audit Trail:</strong> Secure recovery links and user management dashboard.
-                    </span>
+                  <div className="p-3 border border-[#18181a]/20 bg-white">
+                    <span className="font-bold text-[#0047ff] block mb-0.5">03 // AUDIT_TELEMETRY</span>
+                    Timestamped lifecycle tracking and protected resource shielding
                   </div>
                 </div>
 
-                {/* Firebase config pill */}
-                <div className="p-3.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <span className="text-gray-400 text-[11px] block">Connected Firebase Project</span>
-                    <span className="font-mono font-bold text-gray-800 dark:text-gray-200">
-                      {config.projectId}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3 pt-2">
                   <button
                     onClick={() => setIsConfigModalOpen(true)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+                    className="font-mono-tech text-xs text-[#0047ff] hover:underline font-bold"
                   >
-                    View Config
+                    [INSPECT_NODE_CONFIG]
                   </button>
                 </div>
               </div>
 
-              {/* Right Form Card */}
+              {/* Right Column: Industrial Card Form */}
               <div className="lg:col-span-6">
-                <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-gray-200/80 dark:border-gray-800 relative">
+                <div className="industrial-card p-6 sm:p-8">
                   {/* Tab Selector */}
-                  <div className="grid grid-cols-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-6 text-xs font-semibold">
+                  <div className="grid grid-cols-2 border-2 border-[#18181a] mb-6">
                     <button
                       type="button"
                       onClick={() => setAuthMode('login')}
-                      className={`py-2 rounded-lg transition cursor-pointer ${
+                      className={`py-3 font-display uppercase tracking-wider text-sm font-semibold transition cursor-pointer ${
                         authMode === 'login'
-                          ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-xs'
-                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                          ? 'bg-[#18181a] text-white'
+                          : 'bg-white text-[#18181a] hover:bg-gray-100'
                       }`}
                     >
-                      Sign In
+                      AUTHENTICATE
                     </button>
                     <button
                       type="button"
                       onClick={() => setAuthMode('register')}
-                      className={`py-2 rounded-lg transition cursor-pointer ${
+                      className={`py-3 font-display uppercase tracking-wider text-sm font-semibold transition cursor-pointer border-l-2 border-[#18181a] ${
                         authMode === 'register'
-                          ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-xs'
-                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                          ? 'bg-[#18181a] text-white'
+                          : 'bg-white text-[#18181a] hover:bg-gray-100'
                       }`}
                     >
-                      Create Account
+                      REGISTER
                     </button>
                   </div>
 
@@ -156,6 +136,9 @@ const MainContent: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Modals */}
       <ForgotPasswordModal

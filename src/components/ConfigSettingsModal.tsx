@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Settings, X, Database, ShieldCheck, Copy, Check, RotateCcw, Save, ExternalLink } from 'lucide-react';
-import { getActiveFirebaseConfig, saveFirebaseConfig, resetFirebaseConfig, DEFAULT_FIREBASE_CONFIG } from '../services/firebase';
+import { Settings, X, Copy, Check, RotateCcw, Save, ExternalLink } from 'lucide-react';
+import { getActiveFirebaseConfig, saveFirebaseConfig, resetFirebaseConfig } from '../services/firebase';
 
 interface ConfigSettingsModalProps {
   isOpen: boolean;
@@ -48,138 +48,138 @@ export const ConfigSettingsModal: React.FC<ConfigSettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
       <div 
-        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-6 relative max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white border-2 border-[#18181a] p-6 md:p-8 shadow-[8px_8px_0px_#18181a] relative max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+          className="absolute top-4 right-4 text-[#18181a]/60 hover:text-[#18181a] p-1 border border-transparent hover:border-[#18181a] transition"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center">
-            <Settings className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Firebase Project Config</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Active configuration for Auth & Services
-            </p>
-          </div>
+        <div className="mb-4">
+          <span className="font-mono-tech text-[10px] uppercase tracking-[0.2em] text-[#18181a]/60 block mb-1">
+            System Infrastructure
+          </span>
+          <h3 className="font-display font-bold text-3xl uppercase text-[#18181a]">
+            Firebase Node Config
+          </h3>
+          <p className="font-mono-tech text-xs text-[#18181a]/70 mt-1">
+            Active credentials for authentication provider
+          </p>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-800/60 p-3 rounded-xl border border-gray-200 dark:border-gray-700/80 mb-4 text-xs space-y-2">
+        <div className="bg-[#f8f7f4] border-2 border-[#18181a] p-4 mb-4 font-mono-tech text-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Project ID:</span>
-            <span className="font-mono bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded font-medium">
+            <span className="text-[#18181a]/70 font-bold">PROJECT_ID:</span>
+            <span className="text-[#0047ff] font-bold">
               {projectId}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Auth Domain:</span>
-            <span className="font-mono text-gray-600 dark:text-gray-400">
+            <span className="text-[#18181a]/70 font-bold">AUTH_DOMAIN:</span>
+            <span className="text-[#18181a]">
               {authDomain}
             </span>
           </div>
-          <div className="pt-2 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+          <div className="pt-2 flex items-center justify-between border-t border-[#18181a]/15 text-[11px]">
             <a
               href={`https://console.firebase.google.com/project/${projectId}/authentication`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              className="text-[#0047ff] hover:underline font-bold inline-flex items-center gap-1"
             >
-              Open Firebase Console <ExternalLink className="w-3 h-3" />
+              CONSOLE_DIRECT <ExternalLink className="w-3 h-3" />
             </a>
             <button
               onClick={handleCopyJSON}
-              className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              className="text-[#18181a] hover:text-[#0047ff] font-bold inline-flex items-center gap-1 cursor-pointer"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copied' : 'Copy JSON'}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'JSON_COPIED' : 'COPY_RAW_JSON'}
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-3 text-xs">
+        <form onSubmit={handleSave} className="space-y-3 font-mono-tech text-xs">
           <div>
-            <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-              API Key (apiKey)
+            <label className="block text-[10px] uppercase tracking-wider text-[#18181a]/70 font-bold mb-1">
+              API_KEY
             </label>
             <input
               type="text"
               required
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full px-3 py-2 bg-white border-2 border-[#18181a] font-mono-tech text-xs focus:border-[#0047ff] focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Auth Domain (authDomain)
+            <label className="block text-[10px] uppercase tracking-wider text-[#18181a]/70 font-bold mb-1">
+              AUTH_DOMAIN
             </label>
             <input
               type="text"
               required
               value={authDomain}
               onChange={(e) => setAuthDomain(e.target.value)}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full px-3 py-2 bg-white border-2 border-[#18181a] font-mono-tech text-xs focus:border-[#0047ff] focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Project ID
+              <label className="block text-[10px] uppercase tracking-wider text-[#18181a]/70 font-bold mb-1">
+                PROJECT_ID
               </label>
               <input
                 type="text"
                 required
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border-2 border-[#18181a] font-mono-tech text-xs focus:border-[#0047ff] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Messaging Sender ID
+              <label className="block text-[10px] uppercase tracking-wider text-[#18181a]/70 font-bold mb-1">
+                MESSAGING_SENDER_ID
               </label>
               <input
                 type="text"
                 required
                 value={messagingSenderId}
                 onChange={(e) => setMessagingSenderId(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border-2 border-[#18181a] font-mono-tech text-xs focus:border-[#0047ff] focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                App ID
+              <label className="block text-[10px] uppercase tracking-wider text-[#18181a]/70 font-bold mb-1">
+                APP_ID
               </label>
               <input
                 type="text"
                 required
                 value={appId}
                 onChange={(e) => setAppId(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border-2 border-[#18181a] font-mono-tech text-xs focus:border-[#0047ff] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Storage Bucket
+              <label className="block text-[10px] uppercase tracking-wider text-[#18181a]/70 font-bold mb-1">
+                STORAGE_BUCKET
               </label>
               <input
                 type="text"
                 value={storageBucket}
                 onChange={(e) => setStorageBucket(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border-2 border-[#18181a] font-mono-tech text-xs focus:border-[#0047ff] focus:outline-none"
               />
             </div>
           </div>
@@ -188,26 +188,26 @@ export const ConfigSettingsModal: React.FC<ConfigSettingsModalProps> = ({
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition cursor-pointer"
+              className="py-2.5 px-3 border-2 border-[#18181a] font-display uppercase text-xs font-semibold hover:bg-gray-100 flex items-center gap-1.5 cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Reset Defaults
+              RESTORE_DEFAULT
             </button>
 
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition cursor-pointer"
+                className="py-2.5 px-3 border-2 border-[#18181a] font-display uppercase text-xs font-semibold hover:bg-gray-100 cursor-pointer"
               >
-                Close
+                CANCEL
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition cursor-pointer"
+                className="py-2.5 px-4 bg-[#18181a] hover:bg-[#0047ff] text-white font-display uppercase text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" />
-                Save & Reload
+                SAVE_AND_APPLY
               </button>
             </div>
           </div>
